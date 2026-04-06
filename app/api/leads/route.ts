@@ -1,24 +1,46 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { intakeSchema } from '@/components/intake/schema';
-import { supabaseAdmin } from '@/lib/supabase/server';
+import { supabaseAnonServer } from '@/lib/supabase/server';
 import { sendLeadNotification } from '@/lib/email';
 import { calculateBMI } from '@/lib/validators';
 
 export const runtime = 'nodejs';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
+/** Include raw error detail in responses only outside production. */
+function errorBody(message: string, detail?: unknown) {
+  return isDev && detail !== undefined ? { ok: false, error: message, detail } : { ok: false, error: message };
+}
+
 export async function POST(req: NextRequest) {
+  // Fail fast if env vars are missing — gives a precise error instead of a generic 500.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  ) {
+    console.error('[api/leads] missing Supabase env vars');
+    return NextResponse.json(
+      errorBody(
+        'Configuração do servidor incompleta. Faltam variáveis de ambiente do Supabase.',
+      ),
+      { status: 500 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, error: 'JSON inválido' }, { status: 400 });
+    return NextResponse.json(errorBody('JSON inválido'), { status: 400 });
   }
 
   const parsed = intakeSchema.safeParse(body);
   if (!parsed.success) {
+    console.warn('[api/leads] validation failed', parsed.error.flatten());
     return NextResponse.json(
       { ok: false, error: 'Dados inválidos', details: parsed.error.flatten() },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -26,7 +48,9 @@ export async function POST(req: NextRequest) {
   const imc = Number(calculateBMI(data.pesoKg, data.alturaCm).toFixed(2));
 
   try {
-    const supabase = supabaseAdmin();
+    // Use the anon/publishable key. RLS in 0001_init.sql allows anon INSERT
+    // when consentimento_lgpd = true, which we validated above.
+    const supabase = supabaseAnonServer();
     const { data: inserted, error } = await supabase
       .from('leads')
       .insert({
@@ -47,10 +71,19 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('[api/leads] supabase insert error', error);
+      console.error('[api/leads] supabase insert error', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+      // Return real Supabase error in dev so the user can diagnose.
       return NextResponse.json(
-        { ok: false, error: 'Falha ao salvar lead' },
-        { status: 500 }
+        errorBody(`Falha ao salvar: ${error.message}`, {
+          code: error.code,
+          hint: error.hint,
+        }),
+        { status: 500 },
       );
     }
 
@@ -70,9 +103,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: inserted.id });
   } catch (e) {
     console.error('[api/leads] unexpected error', e);
+    const message = e instanceof Error ? e.message : 'Erro desconhecido';
     return NextResponse.json(
-      { ok: false, error: 'Erro interno do servidor' },
-      { status: 500 }
+      errorBody(`Erro interno do servidor: ${message}`),
+      { status: 500 },
     );
   }
 }

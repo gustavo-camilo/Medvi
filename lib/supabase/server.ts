@@ -1,8 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 
 /**
+ * Server-side anon client using the publishable (browser-safe) key.
+ * Subject to RLS policies. Use this for anonymous writes that RLS allows
+ * (e.g. inserting a lead with consentimento_lgpd = true).
+ */
+export function supabaseAnonServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !publishableKey) {
+    throw new Error(
+      'Supabase env vars missing: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY',
+    );
+  }
+
+  return createClient(url, publishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+/**
  * Server-only Supabase client using the secret/service-role key.
- * Never import this from client components.
+ * Bypasses RLS. Never import this from client components.
  *
  * Supports both new (`SUPABASE_SECRET_KEY`) and legacy
  * (`SUPABASE_SERVICE_ROLE_KEY`) env var names.
