@@ -1,6 +1,6 @@
 # MEDVi Brasil — Landing Page
 
-Landing page de telemedicina para emagrecimento com GLP-1, em pt-BR. Stack Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/Radix + Framer Motion, integrada a Supabase (leads) e Resend (notificações). Deploy em DigitalOcean via Docker + Caddy.
+Landing page de telemedicina para emagrecimento com GLP-1, em pt-BR. Stack Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/Radix + Framer Motion, integrada a Supabase (leads) e Resend (notificações). Deploy em DigitalOcean App Platform.
 
 ## Stack
 - **Framework**: Next.js 15 (App Router, React 19)
@@ -9,7 +9,7 @@ Landing page de telemedicina para emagrecimento com GLP-1, em pt-BR. Stack Next.
 - **Animações**: Framer Motion
 - **Formulários**: react-hook-form + Zod
 - **Backend**: Supabase (Postgres + RLS) para leads, Resend para emails transacionais
-- **Deploy**: Docker multi-stage, Caddy 2 (TLS automático)
+- **Deploy**: DigitalOcean App Platform (buildpacks Node.js)
 
 ## Getting started
 
@@ -35,27 +35,21 @@ Abra http://localhost:3000.
 
 A política de RLS permite que usuários anônimos façam INSERT na tabela `leads` somente quando `consentimento_lgpd = true`. Não há política de SELECT, então leads só são lidos via service role.
 
-## DigitalOcean deploy
+## DigitalOcean App Platform deploy
 
-```bash
-# 1. crie um droplet Ubuntu 22.04 (ou superior)
-# 2. aponte seu domínio para o IP do droplet (A record)
-# 3. instale Docker + Docker Compose plugin
-curl -fsSL https://get.docker.com | sh
+A app é detectada automaticamente como Node.js pelo buildpack do App Platform:
 
-# 4. clone o repo no droplet
-git clone <repo-url> /opt/medvi && cd /opt/medvi
+1. Conecte o repositório GitHub no painel do DO App Platform
+2. Selecione esta branch (ou `main` após o merge)
+3. O buildpack detecta `package.json` e usa:
+   - **Build command**: `npm run build`
+   - **Run command**: `npm start`
+   - **Node version**: 22.x (definido em `engines.node`)
+4. Adicione todas as variáveis de ambiente da seção abaixo como **Encrypted env vars** no painel
+5. Aponte seu domínio (DNS → CNAME para o host fornecido pelo DO)
+6. Cada push na branch dispara um novo deploy automaticamente
 
-# 5. configure o ambiente
-cp .env.example .env.local
-nano .env.local   # preencha tudo
-export DOMAIN=medvi.com.br
-
-# 6. suba
-docker compose up -d --build
-```
-
-Caddy gera e renova TLS automaticamente via Let's Encrypt.
+> O `.npmrc` do projeto define `legacy-peer-deps=true` para evitar conflitos de peer-dep durante a transição do ecossistema React 19.
 
 ## Variáveis de ambiente
 
@@ -69,7 +63,6 @@ Caddy gera e renova TLS automaticamente via Let's Encrypt.
 | `LEAD_NOTIFICATION_EMAIL` | não | Email que recebe notificações de novo lead |
 | `LEAD_FROM_EMAIL` | não | Remetente dos emails (ex.: `MEDVi <no-reply@medvi.com.br>`) |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | não | Número do WhatsApp com DDI (ex.: `5511999999999`) |
-| `DOMAIN` | no deploy | Domínio usado pelo Caddy |
 
 ## Edição de conteúdo
 
