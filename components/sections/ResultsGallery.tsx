@@ -1,6 +1,6 @@
+import Image from 'next/image';
 import { SectionHeading } from '@/components/SectionHeading';
-
-const items = Array.from({ length: 8 });
+import { resultsImages } from '@/lib/content';
 
 export function ResultsGallery() {
   return (
@@ -13,15 +13,20 @@ export function ResultsGallery() {
         />
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {items.map((_, i) => (
-            <figure key={i} className="group overflow-hidden rounded-2xl">
-              <div
-                className="aspect-[3/4] w-full bg-gradient-to-br from-forest-200 via-forest-100 to-gold-200 transition-transform group-hover:scale-105"
-                role="img"
-                aria-label={`Resultado real de paciente ${i + 1}`}
-              />
+          {resultsImages.map((img, i) => (
+            <figure key={img.src} className="group overflow-hidden rounded-2xl">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-forest-100">
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  fill
+                  sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading={i < 4 ? 'eager' : 'lazy'}
+                />
+              </div>
               <figcaption className="mt-2 text-sm text-muted-foreground">
-                Resultado real de paciente
+                Imagem ilustrativa
               </figcaption>
             </figure>
           ))}
@@ -29,7 +34,7 @@ export function ResultsGallery() {
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-xs text-muted-foreground">
           Imagens meramente ilustrativas. Em produção, substituir por fotos de pacientes com
-          consentimento expresso por escrito. Resultados variam.
+          consentimento expresso por escrito (CFM Res. 2.314/2022). Resultados variam.
         </p>
       </div>
     </section>

@@ -1,11 +1,19 @@
+import Image from 'next/image';
+import { metabolismImage } from '@/lib/content';
+
 export function MetabolismSection() {
   return (
     <section aria-label="Metabolismo" className="bg-cream section-y">
       <div className="container grid gap-12 lg:grid-cols-2 lg:items-center">
-        <div
-          className="order-2 aspect-[4/5] w-full max-w-md justify-self-center rounded-3xl bg-gradient-to-br from-gold-100 via-cream to-forest-200 lg:order-1"
-          aria-hidden="true"
-        />
+        <div className="relative order-2 aspect-[4/5] w-full max-w-md justify-self-center overflow-hidden rounded-3xl bg-forest-100 lg:order-1">
+          <Image
+            src={metabolismImage.src}
+            alt={metabolismImage.alt}
+            fill
+            sizes="(max-width: 1024px) 90vw, 40vw"
+            className="object-cover"
+          />
+        </div>
         <div className="order-1 lg:order-2">
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-forest">
             Metabolismo

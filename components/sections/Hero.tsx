@@ -1,6 +1,7 @@
+import Image from 'next/image';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { hero } from '@/lib/content';
+import { hero, heroImages } from '@/lib/content';
 
 export function Hero() {
   return (
@@ -34,14 +35,25 @@ export function Hero() {
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-2 gap-4 lg:gap-6"
-          aria-hidden="true"
-        >
-          <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-forest-200 to-forest-500" />
-          <div className="mt-8 aspect-[3/4] rounded-2xl bg-gradient-to-br from-gold-100 to-gold-400" />
-          <div className="aspect-[3/4] rounded-2xl bg-gradient-to-br from-forest-100 to-forest-300" />
-          <div className="mt-8 aspect-[3/4] rounded-2xl bg-gradient-to-br from-cream to-gold-200" />
+        <div className="grid grid-cols-2 gap-4 lg:gap-6">
+          {heroImages.map((img, i) => (
+            <div
+              key={img.src}
+              className={
+                'relative aspect-[3/4] overflow-hidden rounded-2xl bg-forest-100' +
+                (i % 2 === 1 ? ' mt-8' : '')
+              }
+            >
+              <Image
+                src={img.src}
+                alt={img.alt}
+                fill
+                sizes="(max-width: 1024px) 45vw, 25vw"
+                className="object-cover"
+                priority={i < 2}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </section>

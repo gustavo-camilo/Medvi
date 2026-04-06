@@ -1,4 +1,5 @@
-import { explainer } from '@/lib/content';
+import Image from 'next/image';
+import { explainer, explainerImage } from '@/lib/content';
 
 export function HowItWorksExplainer() {
   return (
@@ -17,10 +18,15 @@ export function HowItWorksExplainer() {
             ))}
           </div>
         </div>
-        <div
-          className="aspect-square w-full max-w-md justify-self-center rounded-3xl bg-gradient-to-br from-forest-200 via-forest-50 to-gold-100"
-          aria-hidden="true"
-        />
+        <div className="relative aspect-square w-full max-w-md justify-self-center overflow-hidden rounded-3xl bg-forest-100">
+          <Image
+            src={explainerImage.src}
+            alt={explainerImage.alt}
+            fill
+            sizes="(max-width: 1024px) 90vw, 40vw"
+            className="object-cover"
+          />
+        </div>
       </div>
     </section>
   );

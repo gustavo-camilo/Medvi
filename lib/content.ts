@@ -7,6 +7,51 @@
  * medical lawyer (ANVISA / CFM rules apply to medical advertising in Brazil).
  */
 
+/**
+ * DEV PLACEHOLDER IMAGES — remove before launch.
+ * Neutral lifestyle/medical photos from Unsplash, licensed under the Unsplash
+ * License (free for commercial and non-commercial use, no permission needed).
+ * https://unsplash.com/license
+ *
+ * Replace with licensed photography of real patients (with written consent
+ * per CFM rules) or stock that matches the brand before going public.
+ */
+const UNSPLASH = (id: string, w = 800, h = 1000) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
+
+export const heroImages = [
+  { src: UNSPLASH('photo-1494790108377-be9c29b29330', 800, 1000), alt: 'Mulher sorrindo ao ar livre' },
+  { src: UNSPLASH('photo-1571019613454-1cb2f99b2d8b', 800, 1000), alt: 'Pessoa se exercitando em ambiente natural' },
+  { src: UNSPLASH('photo-1559839734-2b71ea197ec2', 800, 1000), alt: 'Médica atendendo paciente' },
+  { src: UNSPLASH('photo-1490645935967-10de6ba17061', 800, 1000), alt: 'Refeição saudável em mesa rústica' },
+];
+
+export const resultsImages = [
+  { src: UNSPLASH('photo-1544005313-94ddf0286df2', 600, 800), alt: 'Paciente sorridente após tratamento' },
+  { src: UNSPLASH('photo-1438761681033-6461ffad8d80', 600, 800), alt: 'Pessoa feliz ao ar livre' },
+  { src: UNSPLASH('photo-1508214751196-bcfd4ca60f91', 600, 800), alt: 'Retrato de mulher sorridente' },
+  { src: UNSPLASH('photo-1500648767791-00dcc994a43e', 600, 800), alt: 'Homem em caminhada no parque' },
+  { src: UNSPLASH('photo-1506794778202-cad84cf45f1d', 600, 800), alt: 'Retrato de pessoa adulta em ambiente claro' },
+  { src: UNSPLASH('photo-1489424731084-a5d8b219a5bb', 600, 800), alt: 'Mulher ao amanhecer' },
+  { src: UNSPLASH('photo-1517841905240-472988babdf9', 600, 800), alt: 'Retrato casual em tom claro' },
+  { src: UNSPLASH('photo-1544723795-3fb6469f5b39', 600, 800), alt: 'Pessoa se exercitando ao ar livre' },
+];
+
+export const doctorPhotos = [
+  UNSPLASH('photo-1559839734-2b71ea197ec2', 400, 400), // doctor 1
+  UNSPLASH('photo-1612349317150-e413f6a5b16d', 400, 400), // doctor 2
+];
+
+export const metabolismImage = {
+  src: UNSPLASH('photo-1490645935967-10de6ba17061', 800, 1000),
+  alt: 'Alimentos saudáveis em mesa de madeira',
+};
+
+export const explainerImage = {
+  src: UNSPLASH('photo-1576091160399-112ba8d25d1d', 800, 800),
+  alt: 'Profissional da saúde com caneta e estetoscópio',
+};
+
 export const brand = {
   name: 'MEDVi Brasil',
   shortName: 'MEDVi',
