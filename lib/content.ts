@@ -254,12 +254,14 @@ export const guarantee = {
 
 export const doctors = [
   {
+    slug: 'ana-mendes',
     name: 'Dra. Ana Carolina Mendes',
     crm: 'CRM/SP 000.000',
     specialty: 'Endocrinologia',
     bio: 'Especialista em obesidade e metabolismo, com mais de 10 anos de experiência clínica.',
   },
   {
+    slug: 'pedro-souza',
     name: 'Dr. Pedro Henrique Souza',
     crm: 'CRM/RJ 000.000',
     specialty: 'Clínica Médica',

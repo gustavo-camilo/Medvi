@@ -19,7 +19,7 @@ import { TrustBadges } from '@/components/sections/TrustBadges';
 import { Footer } from '@/components/sections/Footer';
 import { IntakeWizard } from '@/components/intake/IntakeWizard';
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <>
       <Header />

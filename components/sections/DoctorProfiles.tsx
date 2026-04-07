@@ -1,5 +1,7 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { SectionHeading } from '@/components/SectionHeading';
 import { doctors, doctorPhotos } from '@/lib/content';
 
@@ -29,6 +31,9 @@ export function DoctorProfiles() {
                 <p className="mt-1 text-sm font-medium text-forest">{d.specialty}</p>
                 <p className="text-xs text-muted-foreground">{d.crm}</p>
                 <p className="mt-4 text-sm text-muted-foreground text-pretty">{d.bio}</p>
+                <Button asChild className="mt-6" size="sm">
+                  <Link href={`/agendar?doctor=${d.slug}`}>Agendar consulta</Link>
+                </Button>
               </CardContent>
             </Card>
           ))}

@@ -110,10 +110,25 @@ export function IntakeWizard() {
         const j = await res.json().catch(() => ({}));
         throw new Error(j?.error ?? 'Falha ao enviar');
       }
+      const json = (await res.json().catch(() => ({}))) as { id?: string };
       try {
         sessionStorage.removeItem('medvi-goal');
+        // Bridge patient contact info to /agendar — the RLS on `leads` blocks
+        // anon SELECT, so the booking API cannot re-read them server-side.
+        sessionStorage.setItem(
+          'medvi-patient',
+          JSON.stringify({
+            nome: values.nome,
+            email: values.email,
+            telefone: values.telefone,
+          }),
+        );
       } catch {}
-      router.push('/obrigado');
+      if (json?.id) {
+        router.push(`/agendar?lead_id=${json.id}`);
+      } else {
+        router.push('/obrigado');
+      }
     } catch (e) {
       setSubmitError(
         e instanceof Error ? e.message : 'Erro inesperado. Tente novamente.'
