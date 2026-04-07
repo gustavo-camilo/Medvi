@@ -1,6 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { createServerClient as createSsrServerClient } from '@supabase/ssr';
+import {
+  createServerClient as createSsrServerClient,
+  type CookieOptions,
+} from '@supabase/ssr';
 import { cookies } from 'next/headers';
+
+type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /**
  * Server-side anon client using the publishable (browser-safe) key.
@@ -70,7 +75,7 @@ export async function createServerClient() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: CookieToSet[]) {
         try {
           for (const { name, value, options } of cookiesToSet) {
             cookieStore.set(name, value, options);
