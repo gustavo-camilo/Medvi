@@ -77,6 +77,79 @@ Faça logout + login de novo e você será redirecionado para `/admin`.
 - **profiles**: usuários leem/atualizam só o próprio; admins leem todos.
 - **orders / payments / message_threads / messages / health_log**: pacientes leem/escrevem só os seus; admins leem tudo.
 
+## Lembretes de consulta (edge function + pg_cron)
+
+A função `supabase/functions/send-appointment-reminders/index.ts` é executada
+periodicamente e envia lembretes de consulta 24h e 1h antes. Ela grava
+`reminder_sent_24h` / `reminder_sent_1h` em `appointments` para nunca
+enviar o mesmo lembrete duas vezes.
+
+### Configuração passo a passo
+
+1. **Rode a migração** `0005_appointment_reminders.sql` (adiciona as colunas de controle).
+2. **No painel Supabase → Database → Extensions**, habilite `pg_cron` e `pg_net`.
+3. **Deploy da edge function** (requer a Supabase CLI localmente):
+
+   ```bash
+   supabase functions deploy send-appointment-reminders --no-verify-jwt
+   ```
+
+4. **Configure os secrets da edge function** (Supabase → Edge Functions → `send-appointment-reminders` → Secrets):
+
+   | Secret | Obrigatório | Descrição |
+   | --- | --- | --- |
+   | `RESEND_API_KEY` | sim (para email) | Chave do Resend |
+   | `LEAD_FROM_EMAIL` | sim | Remetente (ex.: `MEDVi <no-reply@medvi.com.br>`) |
+   | `SITE_URL` | não | Link de portal incluído nos emails |
+   | `WHATSAPP_BSP_URL` | não | URL do seu provedor WhatsApp Business (Twilio, Zenvia, Gupshup, Meta Cloud API) |
+   | `WHATSAPP_BSP_TOKEN` | não | Token do BSP |
+
+   `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` já são injetados automaticamente pelo runtime de edge functions do Supabase.
+
+5. **Agende o cron** rodando este SQL no editor (substitua `YOUR-PROJECT-REF` e a chave):
+
+   ```sql
+   select cron.schedule(
+     'send-appointment-reminders',
+     '*/15 * * * *',
+     $$
+     select net.http_post(
+       url := 'https://YOUR-PROJECT-REF.supabase.co/functions/v1/send-appointment-reminders',
+       headers := jsonb_build_object(
+         'Content-Type', 'application/json',
+         'Authorization', 'Bearer YOUR-ANON-OR-SERVICE-ROLE-KEY'
+       ),
+       body := '{}'::jsonb
+     );
+     $$
+   );
+   ```
+
+6. **Teste manualmente** invocando a edge function uma vez:
+
+   ```bash
+   curl -X POST \
+     "https://YOUR-PROJECT-REF.supabase.co/functions/v1/send-appointment-reminders" \
+     -H "Authorization: Bearer YOUR-ANON-KEY"
+   ```
+
+### WhatsApp — importante
+
+Links `wa.me` só funcionam quando o usuário clica. Envio automatizado
+requer um **Business Solution Provider** (BSP) com template aprovado pela
+Meta. Opções em BR:
+
+- **Meta WhatsApp Cloud API** (direto, mais barato, mas exige setup)
+- **Twilio** (mais caro, muito documentado)
+- **Zenvia** / **Gupshup** / **360dialog** (BSPs brasileiros)
+
+A função `sendWhatsApp()` na edge function já traz a abstração pronta:
+quando você configurar `WHATSAPP_BSP_URL` + `WHATSAPP_BSP_TOKEN` nos secrets,
+ajuste o `body` dentro dessa função para combinar com a API do seu provedor
+(o formato padrão assumido é `{ to, type, text: { body } }` — compatível
+com a Cloud API do Meta). Enquanto os secrets estiverem vazios, a função
+loga o conteúdo que *seria* enviado e segue o fluxo de email normalmente.
+
 ## DigitalOcean App Platform deploy
 
 A app é detectada automaticamente como Node.js pelo buildpack do App Platform:
@@ -116,7 +189,9 @@ Todos os textos em pt-BR e as URLs de imagens placeholder estão centralizados e
 
 - **Gateway de pagamento real** (Mercado Pago / Stripe BR / Pagar.me). O schema em `0004_portal.sql` está pronto; `orders.payment_status` exibe dados placeholder no portal.
 - **Geração automática de link de vídeo-consulta** (Daily / Jitsi / Zoom). O campo `appointments.video_link` é um texto livre — o admin cola o link ao confirmar.
-- **Notificações por SMS / WhatsApp**. Só email via Resend nesta fase.
+- **Email de confirmação imediata após agendamento**. Apenas os lembretes 24h + 1h enviam email. O paciente vê a consulta no `/portal/agendamentos` logo após confirmar.
+- **WhatsApp automatizado** — a abstração existe na edge function (`sendWhatsApp()`), mas exige configurar um BSP (Meta Cloud API, Twilio, Zenvia, Gupshup, etc.) com template aprovado. Veja a seção "Lembretes de consulta" acima.
+- **SMS**. Não implementado. Pode ser adicionado na mesma edge function.
 - **Chat em tempo real** — a página de mensagens lê mensagens existentes mas não usa Realtime. Atualização acontece no reload.
 - **2FA para admin**. Apenas email + senha nesta fase.
 
